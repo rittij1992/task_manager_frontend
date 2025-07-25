@@ -1,0 +1,55 @@
+import React, { useContext, useEffect, useState } from 'react'
+import { SidebarContext } from '../Context/sidebarContext';
+import TaskCard from '../Component/TaskCard';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchTasks } from '../Feature/TaskSlice';
+
+function OverdueTaskPage() {
+    const [isOpen, setIsOpen] = useState(false);
+    const { items, status } = useSelector((state) => state.tasks);
+    const dispatch = useDispatch();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const overdueTasks = items.filter(task => {
+        if (!task.dueDate || task.status === 'Completed') return false;
+
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0); // Normalize due date
+
+        return dueDate < today;
+    });
+
+    useEffect(() => {
+        if (status === 'idle' || status === 'failed') {
+            dispatch(fetchTasks());
+        }
+    }, [status, dispatch]);
+
+
+    return (
+        <div className='text-2xl font-semibold mt-20 ms-20'>
+            <div className='text-start'>
+                <h1>Overdue</h1>
+                <div className='flex items-center gap-1 mt-4 text-gray-600'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 21.001a9 9 0 1 0 0-18 9 9 0 0 0 0 18m0-1a8 8 0 1 1 0-16 8 8 0 0 1 0 16m-4.354-8.104a.5.5 0 0 1 .708 0l2.146 2.147 5.146-5.147a.5.5 0 0 1 .708.708l-5.5 5.5a.5.5 0 0 1-.708 0l-2.5-2.5a.5.5 0 0 1 0-.708" clip-rule="evenodd"></path></svg>
+                    <span className='text-sm font-normal'>{overdueTasks.length} Tasks</span>
+                </div>
+            </div>
+
+
+
+            <div className='mt-10 flex gap-4 justify-start items-center flex-wrap'>
+                {
+                    overdueTasks.length > 0 ? overdueTasks.map((task, index) => (
+                        <TaskCard key={index} task={task} />
+                    )) : (
+                        <div className='text-gray-500'>No overdue tasks available</div>
+                    )
+                }
+            </div>
+        </div>
+    )
+}
+
+export default OverdueTaskPage
